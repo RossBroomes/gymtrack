@@ -426,6 +426,36 @@
   }
 
   /* MUSCLE MAP */
+  /* GIF PREVIEW */
+  .gif-wrap {
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 14px;
+  }
+  .gif-wrap img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+  }
+  .gif-loading {
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 13px;
+    background: var(--surface);
+    border-radius: 10px;
+  }
+  .gif-attr {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+    margin-top: 4px;
+  }
+
   .muscle-map-wrap {
     display: flex;
     gap: 16px;
@@ -1040,6 +1070,9 @@ function renderWorkout(day) {
         </div>
       </div>
       <div class="set-logger">
+        <div class="gif-wrap" id="gif-${ei}">
+          <div class="gif-loading">Loading demo...</div>
+        </div>
         <div class="muscle-map-wrap">
           <div class="muscle-map-bodies">
             <div>
@@ -1083,6 +1116,11 @@ function renderWorkout(day) {
 function toggleCard(ei) {
   const card = document.getElementById(`ecard-${ei}`);
   card.classList.toggle('open');
+  if (card.classList.contains('open')) {
+    const prog = activeProgram()[currentDay];
+    const ex = prog.exercises[ei];
+    if (ex) loadGif(ex.name, `gif-${ei}`);
+  }
 }
 
 function updateSet(day, exName, si, field, value) {
@@ -1126,6 +1164,39 @@ function updateProgress() {
 }
 
 // ─── SAVE SESSION ────────────────────────────────────────────────────────────
+const GIPHY_KEY = 'D9tLHvboPKmsQe5JIiLVcERAeLS4sD4N';
+const gifCache = {};
+
+async function loadGif(exName, containerId) {
+  if (gifCache[exName]) {
+    renderGif(containerId, gifCache[exName]);
+    return;
+  }
+  const query = encodeURIComponent(exName + ' exercise workout');
+  try {
+    const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${query}&limit=3&rating=g`);
+    const json = await res.json();
+    if (json.data && json.data.length > 0) {
+      const gif = json.data[0].images.downsized_medium.url;
+      gifCache[exName] = gif;
+      renderGif(containerId, gif);
+    } else {
+      document.getElementById(containerId).innerHTML = '';
+    }
+  } catch(e) {
+    document.getElementById(containerId).innerHTML = '';
+  }
+}
+
+function renderGif(containerId, url) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = `
+    <img src="${url}" alt="Exercise demo" loading="lazy"/>
+    <div class="gif-attr">Powered by GIPHY</div>
+  `;
+}
+
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxOcz3slD3wYjLREqVZjy03UPz1HNmsq-DtFeg60SuHkZvArkY7UlFVY5_X3rIQNYYW/exec';
 
 function pushToSheets(session) {
