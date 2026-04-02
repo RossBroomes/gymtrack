@@ -2,7 +2,7 @@
   "name": "GymTrack",
   "short_name": "GymTrack",
   "description": "Personal workout progression tracker",
-  "start_url": "/gymtrack/",
+  "start_url": ".",
   "scope": "/gymtrack/",
   "display": "standalone",
   "background_color": "#0d0d0f",
