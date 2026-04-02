@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GymTrack</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0d0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GymTrack">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #161618;
+    --card: #1e1e22;
+    --border: #2a2a30;
+    --accent: #e8ff47;
+    --accent2: #ff4747;
+    --text: #f0f0f0;
+    --muted: #888;
+    --green: #47ffb0;
+    --orange: #ff9a3c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+  .logo span { color: var(--text); }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    border: none;
+    background: transparent;
+    transition: all 0.2s;
+  }
+  .nav-tab.active, .nav-tab:hover {
+    background: var(--card);
+    color: var(--text);
+  }
+  .nav-tab.active { color: var(--accent); }
+
+  /* VIEWS */
+  .view { display: none; padding: 24px; max-width: 900px; margin: 0 auto; }
+  .view.active { display: block; }
+
+  /* DAY SELECTOR */
+  .day-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .day-btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .day-btn:hover { border-color: var(--accent); color: var(--text); }
+  .day-btn.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .day-label {
+    font-size: 11px;
+    display: block;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+
+  /* SESSION HEADER */
+  .session-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .session-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 1px;
+  }
+  .session-title span { color: var(--accent); }
+  .log-btn {
+    padding: 12px 24px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .log-btn:hover { background: #d4eb35; transform: translateY(-1px); }
+
+  /* EXERCISE CARDS */
+  .exercise-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .exercise-card:hover { border-color: #3a3a45; }
+  .exercise-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    cursor: pointer;
+  }
+  .exercise-name {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .exercise-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .target-badge {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .target-badge b { color: var(--accent); }
+  .chevron {
+    color: var(--muted);
+    font-size: 12px;
+    transition: transform 0.2s;
+  }
+  .exercise-card.open .chevron { transform: rotate(180deg); }
+
+  /* SET LOGGER */
+  .set-logger {
+    display: none;
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .exercise-card.open .set-logger { display: block; }
+  .set-row-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr 1fr 80px;
+    gap: 8px;
+    padding: 10px 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .set-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr 1fr 80px;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .set-num {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    text-align: center;
+    background: var(--surface);
+    border-radius: 6px;
+    padding: 8px 0;
+  }
+  .set-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    width: 100%;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .set-input:focus { outline: none; border-color: var(--accent); }
+  .set-done-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 8px;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .set-done-btn:hover, .set-done-btn.done {
+    background: var(--green);
+    color: #000;
+    border-color: var(--green);
+  }
+  .add-set-btn {
+    margin-top: 8px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    width: 100%;
+    transition: all 0.2s;
+  }
+  .add-set-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap {
+    background: var(--surface);
+    border-radius: 20px;
+    height: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 20px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  /* HISTORY VIEW */
+  .history-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .history-empty .icon { font-size: 40px; margin-bottom: 12px; }
+  .session-log {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .session-log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    cursor: pointer;
+  }
+  .session-log-date { font-weight: 600; font-size: 15px; }
+  .session-log-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .session-log-body { display: none; padding: 0 20px 20px; border-top: 1px solid var(--border); }
+  .session-log.open .session-log-body { display: block; }
+  .log-exercise-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 14px 0 6px;
+    color: var(--accent);
+  }
+  .log-set-row {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 4px 0;
+  }
+  .log-set-row b { color: var(--text); }
+
+  /* PROGRESS VIEW */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .exercise-progress-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .ep-name { font-weight: 600; margin-bottom: 12px; }
+  .ep-graph {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 60px;
+    margin-bottom: 8px;
+  }
+  .ep-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .ep-bar {
+    width: 100%;
+    background: var(--accent);
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    transition: height 0.4s ease;
+    opacity: 0.85;
+  }
+  .ep-bar-label {
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 4px;
+    text-align: center;
+  }
+  .ep-trend {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .ep-trend .up { color: var(--green); }
+  .ep-trend .down { color: var(--accent2); }
+
+  /* SAVE BANNER */
+  .save-banner {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--green);
+    color: #000;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 14px 28px;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  .save-banner.show { transform: translateX(-50%) translateY(0); }
+
+  /* EXPORT BTN */
+  .export-btn {
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .export-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    color: var(--muted);
+  }
+
+  /* MUSCLE MAP */
+  .muscle-map-wrap {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0 10px;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  .muscle-map-bodies {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .muscle-map-bodies svg { width: 110px; }
+  .muscle-map-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .muscle-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+    padding-top: 4px;
+  }
+  .legend-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .legend-dot.primary   { background: #e8263a; }
+  .legend-dot.secondary { background: #f07d20; }
+
+  /* GYM MODE TOGGLE */
+  .gym-mode-toggle {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+    margin-bottom: 16px;
+  }
+  .gym-mode-btn {
+    flex: 1;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .gym-mode-btn.active {
+    background: var(--card);
+    color: var(--text);
+  }
+  .gym-mode-btn.hotel.active {
+    background: #1a3a2a;
+    color: #47ffb0;
+    border: 1px solid #1e5a3a;
+  }
+  .hotel-badge {
+    display: inline-block;
+    background: #1a3a2a;
+    color: #47ffb0;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .wiki-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .wiki-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .set-row-header, .set-row { grid-template-columns: 32px 1fr 1fr 1fr 50px; }
+    .session-title { font-size: 24px; }
+    .muscle-map-bodies svg { width: 80px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">GYM<span>TRACK</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('workout')">Workout</button>
+    <button class="nav-tab" onclick="showView('history')">History</button>
+    <button class="nav-tab" onclick="showView('progress')">Progress</button>
+  </div>
+</nav>
+
+<!-- WORKOUT VIEW -->
+<div class="view active" id="view-workout">
+  <div class="gym-mode-toggle">
+    <button class="gym-mode-btn active" id="btn-fullgym" onclick="setGymMode('full')">🏋️ Full Gym</button>
+    <button class="gym-mode-btn hotel" id="btn-hotel" onclick="setGymMode('hotel')">🏨 Hotel Gym</button>
+  </div>
+  <div class="day-selector" id="daySelector"></div>
+  <div id="progressWrap">
+    <div class="progress-label" id="progressLabel">0 / 0 sets completed</div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+  </div>
+  <div class="session-header">
+    <div class="session-title" id="sessionTitle">PULL <span>1</span></div>
+    <button class="log-btn" onclick="saveSession()">✓ Save Session</button>
+  </div>
+  <div id="exerciseList"></div>
+</div>
+
+<!-- HISTORY VIEW -->
+<div class="view" id="view-history">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    <h2 class="section-title" style="margin:0">SESSION HISTORY</h2>
+    <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+  </div>
+  <div id="historyList"></div>
+</div>
+
+<!-- PROGRESS VIEW -->
+<div class="view" id="view-progress">
+  <h2 class="section-title">PROGRESS OVERVIEW</h2>
+  <div class="stats-grid" id="statsGrid"></div>
+  <h2 class="section-title">EXERCISE HISTORY</h2>
+  <div id="progressList"></div>
+</div>
+
+<div class="save-banner" id="saveBanner">Session saved! 💪</div>
+
+<script>
+// ─── MUSCLE MAP ─────────────────────────────────────────────────────────────
+// Each exercise maps to { primary: [...], secondary: [...] }
+// Muscle IDs match SVG path IDs in the body diagrams
+const MUSCLES = {
+  "Deadlifts":         { primary: ["hamstrings","glutes","erector"], secondary: ["traps","lats","quads","forearms"] },
+  "Barbell Curl":      { primary: ["biceps"], secondary: ["forearms","front-delt"] },
+  "Bent-over Row":     { primary: ["lats","mid-back"], secondary: ["biceps","rear-delt","traps"] },
+  "Reverse Cable Fly": { primary: ["rear-delt","mid-back"], secondary: ["traps"] },
+  "Upright Row":       { primary: ["traps","front-delt"], secondary: ["biceps","mid-delt"] },
+  "Inverted Row":      { primary: ["lats","mid-back"], secondary: ["biceps","rear-delt"] },
+  "Battle Ropes":      { primary: ["front-delt","triceps"], secondary: ["biceps","core","traps"] },
+  "Dumbbell Squat":    { primary: ["quads","glutes"], secondary: ["hamstrings","core"] },
+  "Chest Press":       { primary: ["chest"], secondary: ["triceps","front-delt"] },
+  "Incline Press":     { primary: ["upper-chest","front-delt"], secondary: ["triceps"] },
+  "Dips":              { primary: ["chest","triceps"], secondary: ["front-delt"] },
+  "Fly DAP":           { primary: ["chest"], secondary: ["front-delt","biceps"] },
+  "Push Up Row":       { primary: ["chest","lats"], secondary: ["triceps","biceps","core"] },
+  "Push Up":           { primary: ["chest","triceps"], secondary: ["front-delt","core"] },
+  "Low Pulley":        { primary: ["lats","mid-back"], secondary: ["biceps","rear-delt"] },
+  "Lat Pull Down":     { primary: ["lats"], secondary: ["biceps","rear-delt","traps"] },
+  "Pull Ups":          { primary: ["lats"], secondary: ["biceps","mid-back","rear-delt"] },
+  "Face Pull Rope":    { primary: ["rear-delt","mid-back"], secondary: ["traps","biceps"] },
+  "Hammer Curls":      { primary: ["biceps","forearms"], secondary: ["front-delt"] },
+  "Serratus Crunch":   { primary: ["serratus","core"], secondary: ["chest"] },
+  "Decline Bench":     { primary: ["chest","triceps"], secondary: ["front-delt"] },
+  "Skull Crusher":     { primary: ["triceps"], secondary: [] },
+  "O.H. Fr Press":     { primary: ["front-delt","triceps"], secondary: ["mid-delt","traps"] },
+  "Cable Laterals":    { primary: ["mid-delt"], secondary: ["front-delt","traps"] },
+  "Tricep Rope P.D.":  { primary: ["triceps"], secondary: [] },
+  "Sledge Push":       { primary: ["chest","triceps","quads"], secondary: ["glutes","core","front-delt"] },
+  "Ball Slams":        { primary: ["core","front-delt"], secondary: ["traps","lats","hamstrings"] },
+  "Plank":             { primary: ["core"], secondary: ["glutes","serratus"] },
+  // Hotel gym exercises
+  "DB Romanian Deadlift":   { primary: ["hamstrings","glutes"], secondary: ["erector","forearms"] },
+  "DB Curl":                { primary: ["biceps"], secondary: ["forearms","front-delt"] },
+  "DB Bent-over Row":       { primary: ["lats","mid-back"], secondary: ["biceps","rear-delt","traps"] },
+  "DB Reverse Fly":         { primary: ["rear-delt","mid-back"], secondary: ["traps"] },
+  "DB Upright Row":         { primary: ["traps","front-delt"], secondary: ["biceps","mid-delt"] },
+  "Towel Face Pull":        { primary: ["rear-delt","mid-back"], secondary: ["traps","biceps"] },
+  "DB Goblet Squat":        { primary: ["quads","glutes"], secondary: ["hamstrings","core"] },
+  "DB Bench Press":         { primary: ["chest"], secondary: ["triceps","front-delt"] },
+  "DB Incline Press":       { primary: ["upper-chest","front-delt"], secondary: ["triceps"] },
+  "DB Chest Fly":           { primary: ["chest"], secondary: ["front-delt","biceps"] },
+  "DB Lateral Raise":       { primary: ["mid-delt"], secondary: ["front-delt","traps"] },
+  "DB Overhead Press":      { primary: ["front-delt","mid-delt"], secondary: ["triceps","traps"] },
+  "DB Single Arm Row":      { primary: ["lats","mid-back"], secondary: ["biceps","rear-delt"] },
+  "DB Hammer Curl":         { primary: ["biceps","forearms"], secondary: ["front-delt"] },
+  "Pull Up":                { primary: ["lats"], secondary: ["biceps","mid-back","rear-delt"] },
+  "DB Shrug":               { primary: ["traps"], secondary: ["forearms"] },
+  "DB Sumo Squat":          { primary: ["quads","glutes"], secondary: ["hamstrings","core"] },
+  "DB Tricep Kickback":     { primary: ["triceps"], secondary: [] },
+  "DB Overhead Tricep Ext": { primary: ["triceps"], secondary: ["front-delt"] },
+  "DB Front Raise":         { primary: ["front-delt"], secondary: ["mid-delt","traps"] },
+  "Diamond Push Up":        { primary: ["triceps","chest"], secondary: ["front-delt","core"] },
+};
+
+// Muscle ID → fill colour helper
+function muscleColor(id, primary, secondary) {
+  if (primary.includes(id)) return '#e8263a';
+  if (secondary.includes(id)) return '#f07d20';
+  return null;
+}
+
+function buildBodySVG(exName) {
+  const map = MUSCLES[exName] || { primary: [], secondary: [] };
+  const p = map.primary, s = map.secondary;
+  const OFF  = '#3a3a48';   // inactive muscle — visible dark grey
+  const BODY = '#252530';   // body base
+  const STRK = '#4a4a5a';   // outline stroke
+  const c = id => muscleColor(id, p, s) || OFF;
+
+  const front = `<svg viewBox="0 0 120 260" xmlns="http://www.w3.org/2000/svg">
+  <!-- body base -->
+  <path d="M42 18 Q35 22 32 30 Q28 38 28 46 Q20 50 18 58 L16 80 Q16 88 18 96 L20 108 Q24 116 28 120 L28 148 Q26 156 24 168 L22 196 Q22 206 26 210 L32 212 L32 200 L34 172 L36 148 L38 136 L40 148 L42 172 L44 200 L44 212 L50 212 L54 210 Q58 206 58 196 L56 168 Q54 156 52 148 L52 120 Q56 116 60 108 L62 96 Q64 88 64 80 L62 58 Q60 50 52 46 Q52 38 48 30 Q45 22 42 18 Z" fill="${BODY}" stroke="${STRK}" stroke-width="1"/>
+  <!-- head -->
+  <ellipse cx="42" cy="10" rx="9" ry="10" fill="#2a2a38" stroke="${STRK}" stroke-width="1"/>
+  <!-- neck -->
+  <path d="M37 19 L37 24 L47 24 L47 19" fill="#2a2a38" stroke="none"/>
+
+  <!-- traps front -->
+  <path d="M32 30 Q37 26 42 25 Q47 26 52 30 Q48 36 42 37 Q36 36 32 30 Z" fill="${c('traps')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left pec -->
+  <path d="M18 46 Q20 40 28 38 Q34 36 40 37 L40 60 Q32 62 24 60 Q18 56 18 50 Z" fill="${c('chest')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right pec -->
+  <path d="M66 46 Q64 40 56 38 Q50 36 44 37 L44 60 Q52 62 60 60 Q66 56 66 50 Z" fill="${c('chest')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- abs -->
+  <path d="M35 61 L35 62 L40 62 L40 68 L35 68 L35 74 L40 74 L40 80 L35 80 L35 86 L40 86 L40 92 L35 92 L35 96 L49 96 L49 92 L44 92 L44 86 L49 86 L49 80 L44 80 L44 74 L49 74 L49 68 L44 68 L44 62 L49 62 L49 61 Z" fill="${c('core')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- serratus left -->
+  <path d="M24 60 Q18 64 18 72 Q20 76 24 74 Q26 68 28 62 Z" fill="${c('serratus')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- serratus right -->
+  <path d="M60 60 Q66 64 66 72 Q64 76 60 74 Q58 68 56 62 Z" fill="${c('serratus')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left front delt -->
+  <path d="M18 46 Q14 42 12 50 Q12 58 16 60 Q18 56 18 50 Z" fill="${c('front-delt')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right front delt -->
+  <path d="M66 46 Q70 42 72 50 Q72 58 68 60 Q66 56 66 50 Z" fill="${c('front-delt')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left mid delt -->
+  <path d="M12 50 Q10 56 10 64 Q12 68 16 66 Q16 60 16 56 Z" fill="${c('mid-delt')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right mid delt -->
+  <path d="M72 50 Q74 56 74 64 Q72 68 68 66 Q68 60 68 56 Z" fill="${c('mid-delt')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left bicep -->
+  <path d="M10 64 Q8 72 10 82 Q14 86 18 84 Q20 76 18 66 Z" fill="${c('biceps')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right bicep -->
+  <path d="M74 64 Q76 72 74 82 Q70 86 66 84 Q64 76 66 66 Z" fill="${c('biceps')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left forearm -->
+  <path d="M10 82 Q8 92 10 108 Q14 110 18 108 Q20 96 18 84 Z" fill="${c('forearms')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right forearm -->
+  <path d="M74 82 Q76 92 74 108 Q70 110 66 108 Q64 96 66 84 Z" fill="${c('forearms')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left quad -->
+  <path d="M28 100 Q24 112 24 128 Q26 140 30 144 Q34 140 36 128 Q37 112 36 100 Z" fill="${c('quads')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right quad -->
+  <path d="M56 100 Q60 112 60 128 Q58 140 54 144 Q50 140 48 128 Q47 112 48 100 Z" fill="${c('quads')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- knee caps -->
+  <ellipse cx="30" cy="148" rx="7" ry="5" fill="#2a2a38" stroke="${STRK}" stroke-width="0.8"/>
+  <ellipse cx="54" cy="148" rx="7" ry="5" fill="#2a2a38" stroke="${STRK}" stroke-width="0.8"/>
+
+  <!-- shins -->
+  <path d="M24 152 Q22 168 24 190 Q26 196 30 196 Q34 192 34 172 L32 152 Z" fill="#2a2a38" stroke="${STRK}" stroke-width="0.8"/>
+  <path d="M60 152 Q62 168 60 190 Q58 196 54 196 Q50 192 50 172 L52 152 Z" fill="#2a2a38" stroke="${STRK}" stroke-width="0.8"/>
+</svg>`;
+
+  const back = `<svg viewBox="0 0 120 260" xmlns="http://www.w3.org/2000/svg">
+  <!-- body base -->
+  <path d="M42 18 Q35 22 32 30 Q28 38 28 46 Q20 50 18 58 L16 80 Q16 88 18 96 L20 108 Q24 116 28 120 L28 148 Q26 156 24 168 L22 196 Q22 206 26 210 L32 212 L32 200 L34 172 L36 148 L38 136 L40 148 L42 172 L44 200 L44 212 L50 212 L54 210 Q58 206 58 196 L56 168 Q54 156 52 148 L52 120 Q56 116 60 108 L62 96 Q64 88 64 80 L62 58 Q60 50 52 46 Q52 38 48 30 Q45 22 42 18 Z" fill="${BODY}" stroke="${STRK}" stroke-width="1"/>
+  <ellipse cx="42" cy="10" rx="9" ry="10" fill="#2a2a38" stroke="${STRK}" stroke-width="1"/>
+  <path d="M37 19 L37 24 L47 24 L47 19" fill="#2a2a38" stroke="none"/>
+
+  <!-- traps -->
+  <path d="M32 30 Q37 26 42 25 Q47 26 52 30 Q48 40 42 42 Q36 40 32 30 Z" fill="${c('traps')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left rear delt -->
+  <path d="M18 46 Q14 42 12 50 Q12 58 16 60 Q18 56 18 50 Z" fill="${c('rear-delt')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right rear delt -->
+  <path d="M66 46 Q70 42 72 50 Q72 58 68 60 Q66 56 66 50 Z" fill="${c('rear-delt')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left mid delt back -->
+  <path d="M12 50 Q10 56 10 64 Q12 68 16 66 Q16 60 16 56 Z" fill="${c('mid-delt')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right mid delt back -->
+  <path d="M72 50 Q74 56 74 64 Q72 68 68 66 Q68 60 68 56 Z" fill="${c('mid-delt')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left lat -->
+  <path d="M18 46 Q14 54 14 68 Q16 78 22 82 Q26 78 28 70 Q28 58 26 48 Z" fill="${c('lats')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right lat -->
+  <path d="M66 46 Q70 54 70 68 Q68 78 62 82 Q58 78 56 70 Q56 58 58 48 Z" fill="${c('lats')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- mid back / rhomboids -->
+  <path d="M28 38 Q35 34 42 33 Q49 34 56 38 L54 64 Q48 68 42 69 Q36 68 30 64 Z" fill="${c('mid-back')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- erector spinae -->
+  <path d="M36 69 Q34 78 34 96 L38 96 L38 69 Z" fill="${c('erector')}" stroke="${STRK}" stroke-width="0.5"/>
+  <path d="M48 69 Q50 78 50 96 L46 96 L46 69 Z" fill="${c('erector')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left tricep -->
+  <path d="M16 60 Q12 68 12 80 Q14 86 18 84 Q20 76 18 66 Z" fill="${c('triceps')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right tricep -->
+  <path d="M68 60 Q72 68 72 80 Q70 86 66 84 Q64 76 66 66 Z" fill="${c('triceps')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left forearm back -->
+  <path d="M12 80 Q10 92 12 108 Q16 110 18 108 Q20 96 18 84 Z" fill="${c('forearms')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right forearm back -->
+  <path d="M72 80 Q74 92 72 108 Q68 110 66 108 Q64 96 66 84 Z" fill="${c('forearms')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- glutes -->
+  <path d="M28 100 Q24 106 24 116 Q26 124 34 126 Q42 128 50 126 Q58 124 60 116 Q60 106 56 100 Z" fill="${c('glutes')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- left hamstring -->
+  <path d="M24 124 Q22 136 24 152 Q28 158 32 156 Q34 140 34 124 Z" fill="${c('hamstrings')}" stroke="${STRK}" stroke-width="0.5"/>
+  <!-- right hamstring -->
+  <path d="M60 124 Q62 136 60 152 Q56 158 52 156 Q50 140 50 124 Z" fill="${c('hamstrings')}" stroke="${STRK}" stroke-width="0.5"/>
+
+  <!-- knee backs -->
+  <ellipse cx="30" cy="156" rx="7" ry="5" fill="#2a2a38" stroke="${STRK}" stroke-width="0.8"/>
+  <ellipse cx="54" cy="156" rx="7" ry="5" fill="#2a2a38" stroke="${STRK}" stroke-width="0.8"/>
+
+  <!-- calves -->
+  <path d="M24 160 Q22 174 24 192 Q26 198 30 196 Q34 192 34 172 L32 160 Z" fill="#2a2a38" stroke="${STRK}" stroke-width="0.8"/>
+  <path d="M60 160 Q62 174 60 192 Q58 198 54 196 Q50 192 50 172 L52 160 Z" fill="#2a2a38" stroke="${STRK}" stroke-width="0.8"/>
+</svg>`;
+
+  return { front, back };
+}
+
+function buildMuscleLegend(exName) {
+  const map = MUSCLES[exName] || { primary: [], secondary: [] };
+  const fmt = id => id.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+  let html = '';
+  if (map.primary.length) {
+    html += `<div class="legend-section-title">Primary</div>`;
+    html += map.primary.map(m => `<div class="legend-row"><div class="legend-dot primary"></div>${fmt(m)}</div>`).join('');
+  }
+  if (map.secondary.length) {
+    html += `<div class="legend-section-title" style="margin-top:6px">Secondary</div>`;
+    html += map.secondary.map(m => `<div class="legend-row"><div class="legend-dot secondary"></div>${fmt(m)}</div>`).join('');
+  }
+  return html;
+}
+
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const PROGRAM = {
+  "Day 1": {
+    label: "PULL 1",
+    exercises: [
+      { name: "Deadlifts",         type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 40, target: { weight: 40, reps: 10 } },
+      { name: "Barbell Curl",      type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 10, target: { weight: 25, reps: 10 } },
+      { name: "Bent-over Row",     type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 10, target: { weight: 20, reps: 10 } },
+      { name: "Reverse Cable Fly", type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 3,  target: { weight: 4,  reps: 7  } },
+      { name: "Upright Row",       type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 10, target: { weight: 20, reps: 10 } },
+      { name: "Inverted Row",      type: "T", defaultSets: 1, defaultReps: 10, defaultWeight: 0,  target: { weight: 0,  reps: 10 } },
+      { name: "Battle Ropes",      type: "T", defaultSets: 1, defaultReps: 20, defaultWeight: 0,  target: { weight: 0,  reps: 20 } },
+    ]
+  },
+  "Day 2": {
+    label: "PUSH 1",
+    exercises: [
+      { name: "Dumbbell Squat",  type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 0,  target: { weight: 10, reps: 10 } },
+      { name: "Chest Press",     type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 20, target: { weight: 50, reps: 12 } },
+      { name: "Incline Press",   type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 20, target: { weight: 25, reps: 10 } },
+      { name: "Dips",            type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: -35,target: { weight: -35,reps: 10 } },
+      { name: "Fly DAP",         type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 3,  target: { weight: 5,  reps: 10 } },
+      { name: "Push Up Row",     type: "W", defaultSets: 3, defaultReps: 1,  defaultWeight: 4,  target: { weight: 8,  reps: 6  } },
+      { name: "Push Up",         type: "T", defaultSets: 1, defaultReps: 3,  defaultWeight: 0,  target: { weight: 0,  reps: 3  } },
+    ]
+  },
+  "Day 3": {
+    label: "PULL 2",
+    exercises: [
+      { name: "Low Pulley",       type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 40, target: { weight: 50, reps: 12 } },
+      { name: "Lat Pull Down",    type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 30, target: { weight: 40, reps: 12 } },
+      { name: "Pull Ups",         type: "W", defaultSets: 3, defaultReps: 4,  defaultWeight: -35,target: { weight: -35,reps: 12 } },
+      { name: "Face Pull Rope",   type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 12, target: { weight: 15, reps: 12 } },
+      { name: "Hammer Curls",     type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 10, target: { weight: 12, reps: 10 } },
+      { name: "Serratus Crunch",  type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 20, target: { weight: 20, reps: 12 } },
+    ]
+  },
+  "Day 4": {
+    label: "PUSH 2",
+    exercises: [
+      { name: "Decline Bench",     type: "W", defaultSets: 3, defaultReps: 8,  defaultWeight: 45,  target: { weight: 45,  reps: 12 } },
+      { name: "Skull Crusher",     type: "W", defaultSets: 3, defaultReps: 8,  defaultWeight: 10,  target: { weight: 10,  reps: 12 } },
+      { name: "O.H. Fr Press",     type: "W", defaultSets: 3, defaultReps: 8,  defaultWeight: 8,   target: { weight: 10,  reps: 10 } },
+      { name: "Cable Laterals",    type: "W", defaultSets: 3, defaultReps: 8,  defaultWeight: 8,   target: { weight: 8,   reps: 10 } },
+      { name: "Tricep Rope P.D.",  type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 7.5, target: { weight: 7.5, reps: 10 } },
+      { name: "Sledge Push",       type: "W", defaultSets: 3, defaultReps: 3,  defaultWeight: 50,  target: { weight: 50,  reps: 3  } },
+      { name: "Ball Slams",        type: "W", defaultSets: 3, defaultReps: 3,  defaultWeight: 4,   target: { weight: 6,   reps: 3  } },
+      { name: "Plank",             type: "T", defaultSets: 1, defaultReps: 20, defaultWeight: 0,   target: { weight: 0,   reps: 30 } },
+    ]
+  }
+};
+
+// ─── MUSCLEWIKI URLS ─────────────────────────────────────────────────────────
+const MUSCLEWIKI = {
+  "Deadlifts":         "https://musclewiki.com/barbell/male/glutes/barbell-deadlift",
+  "Barbell Curl":      "https://musclewiki.com/barbell/male/biceps/barbell-curl",
+  "Bent-over Row":     "https://musclewiki.com/barbell/male/lats/barbell-bent-over-row",
+  "Reverse Cable Fly": "https://musclewiki.com/cables/male/rear-deltoid/cable-reverse-fly",
+  "Upright Row":       "https://musclewiki.com/barbell/male/traps/barbell-upright-row",
+  "Inverted Row":      "https://musclewiki.com/bodyweight/male/lats/inverted-row",
+  "Battle Ropes":      "https://musclewiki.com/cardio/male/shoulders/battle-ropes",
+  "Dumbbell Squat":    "https://musclewiki.com/dumbbells/male/quads/dumbbell-squat",
+  "Chest Press":       "https://musclewiki.com/dumbbells/male/chest/dumbbell-bench-press",
+  "Incline Press":     "https://musclewiki.com/dumbbells/male/chest/dumbbell-incline-bench-press",
+  "Dips":              "https://musclewiki.com/bodyweight/male/chest/dips",
+  "Fly DAP":           "https://musclewiki.com/cables/male/chest/cable-chest-fly",
+  "Push Up Row":       "https://musclewiki.com/bodyweight/male/chest/push-up",
+  "Push Up":           "https://musclewiki.com/bodyweight/male/chest/push-up",
+  "Low Pulley":        "https://musclewiki.com/cables/male/lats/cable-seated-row",
+  "Lat Pull Down":     "https://musclewiki.com/cables/male/lats/cable-lat-pulldown",
+  "Pull Ups":          "https://musclewiki.com/bodyweight/male/lats/pull-up",
+  "Face Pull Rope":    "https://musclewiki.com/cables/male/rear-deltoid/cable-face-pull",
+  "Hammer Curls":      "https://musclewiki.com/dumbbells/male/biceps/dumbbell-hammer-curl",
+  "Serratus Crunch":   "https://musclewiki.com/bodyweight/male/abs/crunch",
+  "Decline Bench":     "https://musclewiki.com/barbell/male/chest/barbell-decline-bench-press",
+  "Skull Crusher":     "https://musclewiki.com/barbell/male/triceps/barbell-skull-crusher",
+  "O.H. Fr Press":     "https://musclewiki.com/barbell/male/shoulders/barbell-overhead-press",
+  "Cable Laterals":    "https://musclewiki.com/cables/male/shoulders/cable-lateral-raise",
+  "Tricep Rope P.D.":  "https://musclewiki.com/cables/male/triceps/cable-tricep-pushdown-rope",
+  "Sledge Push":       "https://musclewiki.com/cardio/male/quads/sled-push",
+  "Ball Slams":        "https://musclewiki.com/medicineball/male/abs/medicine-ball-slam",
+  "Plank":             "https://musclewiki.com/bodyweight/male/abs/plank",
+};
+
+// ─── HOTEL GYM PROGRAM ───────────────────────────────────────────────────────
+const HOTEL_PROGRAM = {
+  "Day 1": {
+    label: "PULL 1",
+    exercises: [
+      { name: "DB Romanian Deadlift",   type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 20, target: { weight: 24, reps: 10 } },
+      { name: "DB Curl",                type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 10, target: { weight: 14, reps: 12 } },
+      { name: "DB Bent-over Row",       type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 16, target: { weight: 20, reps: 10 } },
+      { name: "DB Reverse Fly",         type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 6,  target: { weight: 8,  reps: 12 } },
+      { name: "DB Upright Row",         type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 10, target: { weight: 14, reps: 10 } },
+      { name: "Inverted Row",           type: "T", defaultSets: 3, defaultReps: 10, defaultWeight: 0,  target: { weight: 0,  reps: 12 } },
+      { name: "Towel Face Pull",        type: "T", defaultSets: 3, defaultReps: 15, defaultWeight: 0,  target: { weight: 0,  reps: 15 } },
+    ]
+  },
+  "Day 2": {
+    label: "PUSH 1",
+    exercises: [
+      { name: "DB Goblet Squat",        type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 16, target: { weight: 20, reps: 12 } },
+      { name: "DB Bench Press",         type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 16, target: { weight: 22, reps: 12 } },
+      { name: "DB Incline Press",       type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 14, target: { weight: 18, reps: 10 } },
+      { name: "Push Up",                type: "T", defaultSets: 3, defaultReps: 12, defaultWeight: 0,  target: { weight: 0,  reps: 15 } },
+      { name: "DB Chest Fly",           type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 10, target: { weight: 14, reps: 12 } },
+      { name: "DB Lateral Raise",       type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 6,  target: { weight: 8,  reps: 12 } },
+      { name: "DB Overhead Press",      type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 12, target: { weight: 16, reps: 10 } },
+    ]
+  },
+  "Day 3": {
+    label: "PULL 2",
+    exercises: [
+      { name: "DB Single Arm Row",      type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 18, target: { weight: 22, reps: 10 } },
+      { name: "DB Curl",                type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 10, target: { weight: 14, reps: 12 } },
+      { name: "DB Hammer Curl",         type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 10, target: { weight: 14, reps: 12 } },
+      { name: "DB Reverse Fly",         type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 6,  target: { weight: 8,  reps: 12 } },
+      { name: "Pull Up",                type: "T", defaultSets: 3, defaultReps: 6,  defaultWeight: 0,  target: { weight: 0,  reps: 10 } },
+      { name: "DB Shrug",               type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 18, target: { weight: 22, reps: 12 } },
+    ]
+  },
+  "Day 4": {
+    label: "PUSH 2",
+    exercises: [
+      { name: "DB Sumo Squat",          type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 20, target: { weight: 24, reps: 12 } },
+      { name: "DB Tricep Kickback",     type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 8,  target: { weight: 10, reps: 12 } },
+      { name: "DB Overhead Tricep Ext", type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 12, target: { weight: 16, reps: 12 } },
+      { name: "DB Lateral Raise",       type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 6,  target: { weight: 8,  reps: 12 } },
+      { name: "DB Front Raise",         type: "W", defaultSets: 3, defaultReps: 12, defaultWeight: 6,  target: { weight: 8,  reps: 12 } },
+      { name: "Diamond Push Up",        type: "T", defaultSets: 3, defaultReps: 10, defaultWeight: 0,  target: { weight: 0,  reps: 15 } },
+      { name: "Plank",                  type: "T", defaultSets: 3, defaultReps: 30, defaultWeight: 0,  target: { weight: 0,  reps: 45 } },
+    ]
+  }
+};
+
+// MuscleWiki URLs for hotel exercises
+const HOTEL_MUSCLEWIKI = {
+  "DB Romanian Deadlift":   "https://musclewiki.com/dumbbells/male/hamstrings/dumbbell-romanian-deadlift",
+  "DB Curl":                "https://musclewiki.com/dumbbells/male/biceps/dumbbell-curl",
+  "DB Bent-over Row":       "https://musclewiki.com/dumbbells/male/lats/dumbbell-bent-over-row",
+  "DB Reverse Fly":         "https://musclewiki.com/dumbbells/male/rear-deltoid/dumbbell-reverse-fly",
+  "DB Upright Row":         "https://musclewiki.com/dumbbells/male/traps/dumbbell-upright-row",
+  "Inverted Row":           "https://musclewiki.com/bodyweight/male/lats/inverted-row",
+  "Towel Face Pull":        "https://musclewiki.com/bodyweight/male/rear-deltoid/band-face-pull",
+  "DB Goblet Squat":        "https://musclewiki.com/dumbbells/male/quads/dumbbell-goblet-squat",
+  "DB Bench Press":         "https://musclewiki.com/dumbbells/male/chest/dumbbell-bench-press",
+  "DB Incline Press":       "https://musclewiki.com/dumbbells/male/chest/dumbbell-incline-bench-press",
+  "Push Up":                "https://musclewiki.com/bodyweight/male/chest/push-up",
+  "DB Chest Fly":           "https://musclewiki.com/dumbbells/male/chest/dumbbell-fly",
+  "DB Lateral Raise":       "https://musclewiki.com/dumbbells/male/shoulders/dumbbell-lateral-raise",
+  "DB Overhead Press":      "https://musclewiki.com/dumbbells/male/shoulders/dumbbell-overhead-press",
+  "DB Single Arm Row":      "https://musclewiki.com/dumbbells/male/lats/dumbbell-single-arm-row",
+  "DB Hammer Curl":         "https://musclewiki.com/dumbbells/male/biceps/dumbbell-hammer-curl",
+  "Pull Up":                "https://musclewiki.com/bodyweight/male/lats/pull-up",
+  "DB Shrug":               "https://musclewiki.com/dumbbells/male/traps/dumbbell-shrug",
+  "DB Sumo Squat":          "https://musclewiki.com/dumbbells/male/quads/dumbbell-sumo-squat",
+  "DB Tricep Kickback":     "https://musclewiki.com/dumbbells/male/triceps/dumbbell-tricep-kickback",
+  "DB Overhead Tricep Ext": "https://musclewiki.com/dumbbells/male/triceps/dumbbell-overhead-tricep-extension",
+  "DB Front Raise":         "https://musclewiki.com/dumbbells/male/shoulders/dumbbell-front-raise",
+  "Diamond Push Up":        "https://musclewiki.com/bodyweight/male/triceps/diamond-push-up",
+  "Plank":                  "https://musclewiki.com/bodyweight/male/abs/plank",
+};
+
+let gymMode = 'full'; // 'full' or 'hotel'
+
+function setGymMode(mode) {
+  gymMode = mode;
+  document.getElementById('btn-fullgym').classList.toggle('active', mode === 'full');
+  document.getElementById('btn-hotel').classList.toggle('active', mode === 'hotel');
+  setData = {};
+  renderWorkout(currentDay);
+}
+
+function activeProgram() {
+  return gymMode === 'hotel' ? HOTEL_PROGRAM : PROGRAM;
+}
+
+function activeWikiUrls() {
+  return gymMode === 'hotel' ? HOTEL_MUSCLEWIKI : MUSCLEWIKI;
+}
+
+const DAYS = ["Day 1", "Day 2", "Day 3", "Day 4"];
+let currentDay = "Day 1";
+let sessions = JSON.parse(localStorage.getItem('gymSessions') || '[]');
+let setData = {}; // { dayName: { exerciseName: [ {weight, reps, done}, ... ] } }
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+function init() {
+  buildDaySelector();
+  renderWorkout(currentDay);
+  renderHistory();
+  renderProgress();
+}
+
+function buildDaySelector() {
+  const el = document.getElementById('daySelector');
+  el.innerHTML = DAYS.map(d => `
+    <button class="day-btn ${d===currentDay?'active':''}" onclick="switchDay('${d}')">
+      ${d}
+      <span class="day-label">${PROGRAM[d].label}</span>
+    </button>
+  `).join('');
+}
+
+function switchDay(day) {
+  currentDay = day;
+  buildDaySelector();
+  renderWorkout(day);
+}
+
+// ─── WORKOUT RENDER ──────────────────────────────────────────────────────────
+function getSetData(day, exName, numSets, defaultReps, defaultWeight) {
+  if (!setData[day]) setData[day] = {};
+  if (!setData[day][exName]) {
+    setData[day][exName] = Array.from({length: numSets}, () => ({
+      weight: defaultWeight, reps: defaultReps, done: false
+    }));
+  }
+  return setData[day][exName];
+}
+
+function renderWorkout(day) {
+  const prog = activeProgram()[day];
+  const wikiUrls = activeWikiUrls();
+  document.getElementById('sessionTitle').innerHTML =
+    `${prog.label.replace(/(\d)/, '<span>$1</span>')}${gymMode === 'hotel' ? ' &nbsp;<span class="hotel-badge">HOTEL</span>' : ''}`;
+  const list = document.getElementById('exerciseList');
+  list.innerHTML = prog.exercises.map((ex, ei) => {
+    const sets = getSetData(day, ex.name, ex.defaultSets, ex.defaultReps, ex.defaultWeight);
+    const typeLabel = ex.type === 'W' ? 'Weighted' : 'Bodyweight';
+    return `
+    <div class="exercise-card" id="ecard-${ei}">
+      <div class="exercise-header" onclick="toggleCard(${ei})">
+        <div>
+          <div class="exercise-name">${ex.name}</div>
+        </div>
+        <div class="exercise-meta">
+          <div class="target-badge">Target: <b>${ex.target.weight > 0 ? ex.target.weight+'kg' : 'BW'}</b> × <b>${ex.target.reps}</b></div>
+          <div class="target-badge">${typeLabel}</div>
+          ${wikiUrls[ex.name] ? `<a class="wiki-btn" href="${wikiUrls[ex.name]}" target="_blank" onclick="event.stopPropagation()">▶ Demo</a>` : ''}
+          <span class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="set-logger">
+        <div class="muscle-map-wrap">
+          <div class="muscle-map-bodies">
+            <div>
+              ${buildBodySVG(ex.name).front}
+              <div class="muscle-map-label">Front</div>
+            </div>
+            <div>
+              ${buildBodySVG(ex.name).back}
+              <div class="muscle-map-label">Back</div>
+            </div>
+          </div>
+          <div class="muscle-legend">${buildMuscleLegend(ex.name)}</div>
+        </div>
+        <div class="set-row-header">
+          <div>SET</div><div>WEIGHT (kg)</div><div>REPS</div><div>RPE</div><div>DONE</div>
+        </div>
+        ${sets.map((s, si) => `
+          <div class="set-row" id="setrow-${ei}-${si}">
+            <div class="set-num">${si+1}</div>
+            <input class="set-input" type="number" value="${s.weight}" step="0.5"
+              onchange="updateSet('${day}','${ex.name}',${si},'weight',this.value)" placeholder="kg">
+            <input class="set-input" type="number" value="${s.reps}"
+              onchange="updateSet('${day}','${ex.name}',${si},'reps',this.value)" placeholder="reps">
+            <input class="set-input" type="number" min="1" max="10" placeholder="RPE"
+              onchange="updateSet('${day}','${ex.name}',${si},'rpe',this.value)">
+            <button class="set-done-btn ${s.done?'done':''}" onclick="toggleSetDone(${ei},${si},'${day}','${ex.name}')">
+              ${s.done ? '✓' : '○'}
+            </button>
+          </div>
+        `).join('')}
+        <button class="add-set-btn" onclick="addSet(${ei},'${day}','${ex.name}',${ex.defaultReps},${ex.defaultWeight})">
+          + Add Set
+        </button>
+      </div>
+    </div>
+    `;
+  }).join('');
+  updateProgress();
+}
+
+function toggleCard(ei) {
+  const card = document.getElementById(`ecard-${ei}`);
+  card.classList.toggle('open');
+}
+
+function updateSet(day, exName, si, field, value) {
+  if (!setData[day]?.[exName]) return;
+  setData[day][exName][si][field] = field === 'rpe' ? parseInt(value) : parseFloat(value);
+}
+
+function toggleSetDone(ei, si, day, exName) {
+  const sets = setData[day]?.[exName];
+  if (!sets) return;
+  sets[si].done = !sets[si].done;
+  const btn = document.querySelector(`#setrow-${ei}-${si} .set-done-btn`);
+  if (btn) {
+    btn.classList.toggle('done', sets[si].done);
+    btn.textContent = sets[si].done ? '✓' : '○';
+  }
+  updateProgress();
+}
+
+function addSet(ei, day, exName, defaultReps, defaultWeight) {
+  if (!setData[day]) setData[day] = {};
+  if (!setData[day][exName]) setData[day][exName] = [];
+  setData[day][exName].push({ weight: defaultWeight, reps: defaultReps, done: false });
+  renderWorkout(day);
+  // Re-open the card
+  const card = document.getElementById(`ecard-${ei}`);
+  if (card) card.classList.add('open');
+}
+
+function updateProgress() {
+  const prog = activeProgram()[currentDay];
+  let total = 0, done = 0;
+  prog.exercises.forEach(ex => {
+    const sets = setData[currentDay]?.[ex.name] || [];
+    total += sets.length;
+    done += sets.filter(s => s.done).length;
+  });
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${done} / ${total} sets completed`;
+}
+
+// ─── SAVE SESSION ────────────────────────────────────────────────────────────
+function saveSession() {
+  const day = currentDay;
+  const prog = activeProgram()[day];
+  const now = new Date();
+  const exercises = prog.exercises.map(ex => ({
+    name: ex.name,
+    sets: (setData[day]?.[ex.name] || []).map(s => ({ ...s }))
+  })).filter(ex => ex.sets.some(s => s.done));
+
+  if (exercises.length === 0) {
+    alert('Please complete at least one set before saving!');
+    return;
+  }
+
+  const session = {
+    id: Date.now(),
+    date: now.toLocaleDateString('en-GB', { weekday:'long', year:'numeric', month:'long', day:'numeric' }),
+    dateISO: now.toISOString(),
+    day: day,
+    label: prog.label,
+    mode: gymMode,
+    exercises
+  };
+  sessions.unshift(session);
+  localStorage.setItem('gymSessions', JSON.stringify(sessions));
+
+  // Reset
+  delete setData[day];
+  renderWorkout(day);
+  renderHistory();
+  renderProgress();
+
+  const banner = document.getElementById('saveBanner');
+  banner.classList.add('show');
+  setTimeout(() => banner.classList.remove('show'), 2500);
+}
+
+// ─── HISTORY ─────────────────────────────────────────────────────────────────
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (sessions.length === 0) {
+    el.innerHTML = `<div class="history-empty"><div class="icon">🏋️</div><p>No sessions logged yet.<br>Complete a workout and hit Save Session!</p></div>`;
+    return;
+  }
+  el.innerHTML = sessions.map((s, i) => {
+    const totalSets = s.exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
+    const exNames = s.exercises.map(e => e.name).slice(0,3).join(', ') + (s.exercises.length > 3 ? '...' : '');
+    return `
+    <div class="session-log" id="slog-${i}">
+      <div class="session-log-header" onclick="toggleSessionLog(${i})">
+        <div>
+          <div class="session-log-date">${s.date}</div>
+          <div class="session-log-meta">${s.label}${s.mode==='hotel' ? ' <span class="hotel-badge">HOTEL</span>' : ''} · ${totalSets} sets · ${exNames}</div>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="session-log-body">
+        ${s.exercises.map(ex => `
+          <div class="log-exercise-name">${ex.name}</div>
+          ${ex.sets.map((set, si) => `
+            <div class="log-set-row">
+              <span>Set ${si+1}</span>
+              <span><b>${set.weight > 0 ? set.weight+'kg' : 'BW'}</b></span>
+              <span><b>${set.reps}</b> reps</span>
+              ${set.rpe ? `<span>RPE <b>${set.rpe}</b></span>` : ''}
+            </div>
+          `).join('')}
+        `).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSessionLog(i) {
+  document.getElementById(`slog-${i}`)?.classList.toggle('open');
+}
+
+// ─── PROGRESS ────────────────────────────────────────────────────────────────
+function renderProgress() {
+  // Stats
+  const totalSessions = sessions.length;
+  const totalSets = sessions.reduce((acc, s) => acc + s.exercises.reduce((a, ex) => a + ex.sets.length, 0), 0);
+  const days = new Set(sessions.map(s => s.day)).size;
+  const lastSession = sessions[0]?.date?.split(',')[0] || '-';
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total Sessions</div>
+      <div class="stat-value">${totalSessions}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Sets Logged</div>
+      <div class="stat-value">${totalSets}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Days Trained</div>
+      <div class="stat-value">${days}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Last Session</div>
+      <div class="stat-value" style="font-size:20px;padding-top:8px">${lastSession}</div>
+    </div>
+  `;
+
+  // Per-exercise progress
+  const exMap = {};
+  sessions.forEach(s => {
+    s.exercises.forEach(ex => {
+      if (!exMap[ex.name]) exMap[ex.name] = [];
+      const best = ex.sets.reduce((b, set) => Math.max(b, set.weight || 0), 0);
+      const totalReps = ex.sets.reduce((acc, set) => acc + (set.reps || 0), 0);
+      exMap[ex.name].push({ date: s.dateISO, weight: best, reps: totalReps, label: s.date.split(',')[0] });
+    });
+  });
+
+  const el = document.getElementById('progressList');
+  if (Object.keys(exMap).length === 0) {
+    el.innerHTML = `<div class="history-empty"><div class="icon">📈</div><p>Log sessions to see your progress here.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = Object.entries(exMap).map(([name, logs]) => {
+    const reversed = [...logs].reverse();
+    const maxW = Math.max(...reversed.map(l => l.weight), 1);
+    const first = reversed[0]?.weight || 0;
+    const last = reversed[reversed.length-1]?.weight || 0;
+    const diff = last - first;
+    const trendClass = diff > 0 ? 'up' : diff < 0 ? 'down' : '';
+    const trendText = diff > 0 ? `▲ +${diff}kg` : diff < 0 ? `▼ ${diff}kg` : '→ No change';
+    const bars = reversed.slice(-6);
+    return `
+    <div class="exercise-progress-card">
+      <div class="ep-name">${name}</div>
+      <div class="ep-graph">
+        ${bars.map(b => {
+          const h = maxW > 0 ? Math.max(Math.round(b.weight / maxW * 100), 4) : 4;
+          return `<div class="ep-bar-wrap">
+            <div class="ep-bar" style="height:${h}%"></div>
+            <div class="ep-bar-label">${b.weight > 0 ? b.weight+'kg' : 'BW'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="ep-trend">Best: <b>${last}kg</b> &nbsp; Trend: <span class="${trendClass}">${trendText}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ─── EXPORT ──────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const rows = [['Date', 'Day', 'Session', 'Exercise', 'Set', 'Weight (kg)', 'Reps', 'RPE']];
+  sessions.forEach(s => {
+    s.exercises.forEach(ex => {
+      ex.sets.forEach((set, si) => {
+        rows.push([s.date, s.day, s.label, ex.name, si+1, set.weight ?? '', set.reps ?? '', set.rpe ?? '']);
+      });
+    });
+  });
+  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `gym_progression_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+// ─── VIEWS ───────────────────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + name)?.classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'history') renderHistory();
+  if (name === 'progress') renderProgress();
+}
+
+init();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
