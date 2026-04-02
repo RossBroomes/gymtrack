@@ -641,7 +641,7 @@ const MUSCLES = {
   "Incline Press":     { primary: ["upper-chest","front-delt"], secondary: ["triceps"] },
   "Dips":              { primary: ["chest","triceps"], secondary: ["front-delt"] },
   "Fly DAP":           { primary: ["chest"], secondary: ["front-delt","biceps"] },
-  "Push Up Row":       { primary: ["chest","lats"], secondary: ["triceps","biceps","core"] },
+  "Cable Row":       { primary: ["lats","mid-back"], secondary: ["biceps","rear-delt"] },
   "Push Up":           { primary: ["chest","triceps"], secondary: ["front-delt","core"] },
   "Low Pulley":        { primary: ["lats","mid-back"], secondary: ["biceps","rear-delt"] },
   "Lat Pull Down":     { primary: ["lats"], secondary: ["biceps","rear-delt","traps"] },
@@ -852,7 +852,7 @@ const PROGRAM = {
       { name: "Incline Press",   type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 20, target: { weight: 25, reps: 10 } },
       { name: "Dips",            type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: -35,target: { weight: -35,reps: 10 } },
       { name: "Fly DAP",         type: "W", defaultSets: 3, defaultReps: 10, defaultWeight: 3,  target: { weight: 5,  reps: 10 } },
-      { name: "Push Up Row",     type: "W", defaultSets: 3, defaultReps: 1,  defaultWeight: 4,  target: { weight: 8,  reps: 6  } },
+      { name: "Cable Row",     type: "W", defaultSets: 3, defaultReps: 1,  defaultWeight: 4,  target: { weight: 8,  reps: 6  } },
       { name: "Push Up",         type: "T", defaultSets: 1, defaultReps: 3,  defaultWeight: 0,  target: { weight: 0,  reps: 3  } },
     ]
   },
@@ -887,31 +887,31 @@ const MUSCLEWIKI = {
   "Deadlifts":         "https://musclewiki.com/exercise/barbell-deadlift",
   "Barbell Curl":      "https://musclewiki.com/exercise/barbell-curl",
   "Bent-over Row":     "https://musclewiki.com/exercise/barbell-bent-over-row",
-  "Reverse Cable Fly": "https://musclewiki.com/exercise/cable-reverse-fly",
+  "Reverse Cable Fly": "https://musclewiki.com/exercise/cable-high-reverse-fly",
   "Upright Row":       "https://musclewiki.com/exercise/barbell-upright-row",
   "Inverted Row":      "https://musclewiki.com/exercise/inverted-row",
-  "Battle Ropes":      "https://musclewiki.com/exercise/battle-ropes",
-  "Dumbbell Squat":    "https://musclewiki.com/exercise/dumbbell-squat",
-  "Chest Press":       "https://musclewiki.com/exercise/dumbbell-bench-press",
-  "Incline Press":     "https://musclewiki.com/exercise/dumbbell-incline-bench-press",
-  "Dips":              "https://musclewiki.com/exercise/dips",
-  "Fly DAP":           "https://musclewiki.com/exercise/cable-chest-fly",
-  "Push Up Row":       "https://musclewiki.com/exercise/push-up",
+  "Battle Ropes":      null,
+  "Dumbbell Squat":    "https://musclewiki.com/exercise/dumbbell-goblet-squat",
+  "Chest Press":       "https://musclewiki.com/exercise/barbell-bench-press",
+  "Incline Press":     "https://musclewiki.com/exercise/barbell-incline-bench-press",
+  "Dips":              "https://musclewiki.com/exercise/parralel-bar-dips",
+  "Fly DAP":           "https://musclewiki.com/exercise/cable-pec-fly",
+  "Cable Row":         "https://musclewiki.com/exercise/machine-seated-cable-row",
   "Push Up":           "https://musclewiki.com/exercise/push-up",
-  "Low Pulley":        "https://musclewiki.com/exercise/cable-seated-row",
-  "Lat Pull Down":     "https://musclewiki.com/exercise/cable-lat-pulldown",
-  "Pull Ups":          "https://musclewiki.com/exercise/pull-up",
-  "Face Pull Rope":    "https://musclewiki.com/exercise/cable-face-pull",
+  "Low Pulley":        "https://musclewiki.com/exercise/cable-archer-row",
+  "Lat Pull Down":     "https://musclewiki.com/exercise/machine-pulldown",
+  "Pull Ups":          "https://musclewiki.com/exercise/pull-ups",
+  "Face Pull Rope":    "https://musclewiki.com/exercise/machine-face-pulls",
   "Hammer Curls":      "https://musclewiki.com/exercise/dumbbell-hammer-curl",
-  "Serratus Crunch":   "https://musclewiki.com/exercise/crunch",
-  "Decline Bench":     "https://musclewiki.com/exercise/barbell-decline-bench-press",
-  "Skull Crusher":     "https://musclewiki.com/exercise/barbell-skull-crusher",
+  "Serratus Crunch":   "serratus_crunch.gif",
+  "Decline Bench":     "https://musclewiki.com/exercise/barbell-incline-bench-press",
+  "Skull Crusher":     "https://musclewiki.com/exercise/kettlebell-skull-crusher",
   "O.H. Fr Press":     "https://musclewiki.com/exercise/barbell-overhead-press",
-  "Cable Laterals":    "https://musclewiki.com/exercise/cable-lateral-raise",
-  "Tricep Rope P.D.":  "https://musclewiki.com/exercise/cable-tricep-pushdown-rope",
-  "Sledge Push":       "https://musclewiki.com/exercise/sled-push",
-  "Ball Slams":        "https://musclewiki.com/exercise/medicine-ball-slam",
-  "Plank":             "https://musclewiki.com/exercise/plank",
+  "Cable Laterals":    "https://musclewiki.com/exercise/cable-low-single-arm-lateral-raise",
+  "Tricep Rope P.D.":  "https://musclewiki.com/exercise/cable-rope-pushdown",
+  "Sledge Push":       null,
+  "Ball Slams":        "https://musclewiki.com/exercise/slam",
+  "Plank":             "https://musclewiki.com/exercise/hand-plank",
 };
 
 // ─── HOTEL GYM PROGRAM ───────────────────────────────────────────────────────
@@ -1069,7 +1069,12 @@ function renderWorkout(day) {
         <div class="exercise-meta">
           <div class="target-badge">Target: <b>${ex.target.weight > 0 ? ex.target.weight+'kg' : 'BW'}</b> × <b>${ex.target.reps}</b></div>
           <div class="target-badge">${typeLabel}</div>
-          ${(activeWikiUrls()[ex.name]) ? `<a class="wiki-btn" href="${activeWikiUrls()[ex.name]}" target="_blank" onclick="event.stopPropagation()">▶ Demo</a>` : ''}
+          ${(() => {
+            const url = activeWikiUrls()[ex.name];
+            if (!url) return '';
+            if (url.endsWith('.gif')) return `<a class="wiki-btn" href="${url}" target="_blank" onclick="event.stopPropagation()">▶ Demo</a>`;
+            return `<a class="wiki-btn" href="${url}" target="_blank" onclick="event.stopPropagation()">▶ Demo</a>`;
+          })()}
           <span class="chevron">▼</span>
         </div>
       </div>
@@ -1177,7 +1182,7 @@ const GIF_SEARCH = {
   "Incline Press":         "incline dumbbell press exercise",
   "Dips":                  "chest dips exercise",
   "Fly DAP":               "cable chest fly exercise",
-  "Push Up Row":           "push up row exercise",
+  "Cable Row":           "cable seated row exercise",
   "Push Up":               "push up exercise",
   "Low Pulley":            "cable seated row exercise",
   "Lat Pull Down":         "lat pulldown cable exercise",
